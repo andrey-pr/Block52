@@ -53,20 +53,6 @@ static void ws2812b_gpio_init(void)
 	GPIO_InitStruct.Pull      = GPIO_NOPULL;
 	GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(WS2812B_PORT, &GPIO_InitStruct);
-
-	// Enable output pins for debuging to see DMA Full and Half transfer interrupts
-	#if defined(LED_BLUE_PORT) && defined(LED_ORANGE_PORT)
-		__HAL_RCC_GPIOD_CLK_ENABLE();
-
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-
-		GPIO_InitStruct.Pin = LED_BLUE_PIN;
-		HAL_GPIO_Init(LED_BLUE_PORT, &GPIO_InitStruct);
-		GPIO_InitStruct.Pin = LED_ORANGE_PIN;
-		HAL_GPIO_Init(LED_ORANGE_PORT, &GPIO_InitStruct);
-	#endif
 }
 
 TIM_HandleTypeDef    TIM1_handle;
@@ -305,7 +291,7 @@ void DMA_TransferHalfHandler(DMA_HandleTypeDef *DmaHandle)
 {
 
 	// Is this the last LED?
-	if(ws2812b.repeatCounter == WS2812B_NUMBER_OF_LEDS)
+	if(ws2812b.repeatCounter == ws2812b.item[0].frameBufferSize/3/sizeof(uint8_t))
 	 {
 
 		// If this is the last pixel, set the next pixel value to zeros, because
@@ -330,11 +316,7 @@ void DMA_TransferHalfHandler(DMA_HandleTypeDef *DmaHandle)
 void DMA_TransferCompleteHandler(DMA_HandleTypeDef *DmaHandle)
 {
 
-	#if defined(LED_ORANGE_PORT)
-		LED_ORANGE_PORT->BSRR = LED_ORANGE_PIN;
-	#endif
-
-	if(ws2812b.repeatCounter == WS2812B_NUMBER_OF_LEDS)
+	if(ws2812b.repeatCounter == ws2812b.item[0].frameBufferSize/3/sizeof(uint8_t))
 	{
 		// Transfer of all LEDs is done, disable DMA but enable tiemr update IRQ to stop the 50us pulse
 		ws2812b.repeatCounter = 0;
@@ -380,28 +362,12 @@ void DMA_TransferCompleteHandler(DMA_HandleTypeDef *DmaHandle)
 
 		ws2812b.repeatCounter++;
 	}
-
-
-
-	#if defined(LED_ORANGE_PORT)
-		LED_ORANGE_PORT->BSRR = LED_ORANGE_PIN << 16;
-	#endif
-
 }
 
 void DMA2_Stream2_IRQHandler(void)
 {
-
-	#if defined(LED_BLUE_PORT)
-		LED_BLUE_PORT->BSRR = LED_BLUE_PIN;
-	#endif
-
 	// Check the interrupt and clear flag
 	  HAL_DMA_IRQHandler(&dmaCC2);
-
-	#if defined(LED_BLUE_PORT)
-		LED_BLUE_PORT->BSRR = LED_BLUE_PIN << 16;
-	#endif
 }
 
 void TIM1_UP_TIM10_IRQHandler(void)
