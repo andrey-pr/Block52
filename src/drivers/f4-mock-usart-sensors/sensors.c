@@ -1,11 +1,10 @@
-#include "drivers.h"
+#include "sensors.h"
 
-int main()
+UART_HandleTypeDef usartHandle;
+bool state[4] = {false, false, false, false};
+bool sensors_init()
 {
-    hardware_init();
-    led_init(1);
-    sensors_init();
-    GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitTypeDef GPIO_InitStruct;
 
 	MOCK_SENSOR_USART_GPIO_CLK_ENABLE();
 
@@ -18,7 +17,6 @@ int main()
 
 	MOCK_SENSOR_USART_CLK_ENABLE();
 
-    UART_HandleTypeDef usartHandle;
 	usartHandle.Instance = MOCK_SENSOR_USART;
 	usartHandle.Init.BaudRate = MOCK_SENSOR_USART_BAUDRATE;
 	usartHandle.Init.WordLength = UART_WORDLENGTH_8B;
@@ -31,25 +29,33 @@ int main()
 	{
 		return false;
 	}
-    while (true)
-    {
-        while (!led_isReady())
-            ;
-        if (sensors_IsCrossed(LOWER_OUTER_SENSOR))
-        {
-            led_setPixel(0, 128, 0, 64);
-            //led_setPixel(1, 64, 0, 128);
-        }
-        led_pushFrameboofer();
-        delay(100);
-        while (!led_isReady())
-            ;
-        if (sensors_IsCrossed(LOWER_INNER_SENSOR))
-        {
-            led_setPixel(0, 64, 0, 128);
-            //led_setPixel(1, 128, 0, 64);
-        }
-        led_pushFrameboofer();
-        delay(100);
-    }
+	return true;
+}
+
+bool sensors_IsCrossed(enum Sensors sensor)
+{
+	if (state[sensor])
+	{
+		state[sensor] = false;
+		return true;
+	}
+	uint8_t rxData;
+	while (__HAL_UART_GET_FLAG(&usartHandle, UART_FLAG_RXNE))
+	{
+		if (HAL_UART_Receive(&usartHandle, &rxData, 1, 100) == HAL_OK)
+		{
+			if (rxData - 'a' >= 0 && rxData - 'a' <= 3)
+			{
+				if (rxData - 'a' == sensor)
+				{
+					return true;
+				}
+				else
+				{
+					state[rxData - 'a'] = true;
+				}
+			}
+		}
+	}
+	return false;
 }

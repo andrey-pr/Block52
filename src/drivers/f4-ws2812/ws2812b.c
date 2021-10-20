@@ -12,7 +12,6 @@
 
 */
 
-#include <string.h>
 #include "ws2812b.h"
 
 extern WS2812_Struct ws2812b;

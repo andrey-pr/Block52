@@ -1,9 +1,5 @@
 #pragma once
-
-#ifdef DISCO_TESTBOARD
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx.h"
-#endif
+#include "stm32f4xx_hal.h"//TODO
 
 #ifdef __cplusplus
 extern "C"

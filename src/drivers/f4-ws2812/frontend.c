@@ -4,6 +4,7 @@ uint8_t *frameBuffer;
 void led_init(int pcs)
 {
     frameBuffer = (uint8_t *)malloc(pcs * 3 * sizeof(uint8_t));
+    for(int i = 0; i < sizeof(frameBuffer); i++) frameBuffer[i] = 0;
     ws2812b.item[0].channel = 0;
     ws2812b.item[0].frameBufferPointer = frameBuffer;
     ws2812b.item[0].frameBufferSize = sizeof(frameBuffer);

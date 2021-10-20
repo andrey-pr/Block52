@@ -1,4 +1,3 @@
-#pragma once
 /*
 
   WS2812B CPU and memory efficient library
@@ -13,14 +12,8 @@
 
 */
 
-#include "stm32f4xx_hal.h"
+#include "../../defines.h"
 
-// GPIO enable command
-#define WS2812B_GPIO_CLK_ENABLE() __HAL_RCC_GPIOC_CLK_ENABLE()
-// LED output port
-#define WS2812B_PORT GPIOC
-// LED output pins
-#define WS2812B_PINS GPIO_PIN_0
 // How many LEDs are in the series - only valid multiples by two
 
 // Number of paralel output LED strips. Each has its own buffer.
@@ -33,8 +26,6 @@
 //#define SETPIX_2	// Bit band in a loop
 //#define SETPIX_3	// Like SETPIX_1 but with unrolled loop
 #define SETPIX_4	// Fastest copying using bit-banding
-
-
 
 // Public functions
 // ****************
