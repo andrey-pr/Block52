@@ -44,6 +44,7 @@ bool sensors_IsCrossed(enum Sensors sensor)
 	{
 		if (HAL_UART_Receive(&usartHandle, &rxData, 1, 100) == HAL_OK)
 		{
+			HAL_UART_Transmit(&usartHandle, &rxData, sizeof(rxData), 500);
 			if (rxData - 'a' >= 0 && rxData - 'a' <= 3)
 			{
 				if (rxData - 'a' == sensor)

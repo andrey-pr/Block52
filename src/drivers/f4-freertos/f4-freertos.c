@@ -1,6 +1,7 @@
 #include "f4-freertos.h"
 
 TIM_HandleTypeDef TIM_InitStruct;
+extern void xPortSysTickHandler( void );
 
 void freertos_init()
 {
@@ -12,7 +13,7 @@ void vPortSetupTimerInterrupt(void)
     RTOS_TICK_TIMER_CLK_ENABLE();
 
     /*
-        From STM32F407 datasheet, Timer2 is clocked from
+        From STM32F407 datasheet, Timer is clocked from
         APB1 bus (42Mhz max). In default configuration
         Timer is receiving 16Mhz (HSI) bus clock.
     */
@@ -83,6 +84,6 @@ void RTOS_TICK_TIMER_IRQHandler(void)
     */
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
     {
-        xTaskIncrementTick();
+        xPortSysTickHandler();
     }
 }
