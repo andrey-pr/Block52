@@ -3,6 +3,7 @@
 void freertos_init()
 {
     NVIC_SetPriorityGrouping(0U);
+    qHandle = xQueueCreate(3, sizeof(struct UserOnStairs));
 }
 
 void delay(long ms)
