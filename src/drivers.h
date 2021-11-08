@@ -17,3 +17,6 @@
 #ifdef BLUEPILL_TESTBOARD
 #include "boards/bluepill_testboard/bluepill_testboard_drivers.h"
 #endif
+#ifdef BLUEPILL_TESTBOARD_1_VL53
+#include "boards/bluepill_testboard_1_vl53/bluepill_testboard_drivers_1_vl53.h"
+#endif
