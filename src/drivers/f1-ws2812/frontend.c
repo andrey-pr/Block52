@@ -12,6 +12,8 @@ void led_init(int pcs)
     ws2812b.item[0].frameBufferSize = pcs*3;//WARNING. POSSIBLE PROBLEMS. NEED RESEARCH
 
     ws2812b_init();
+
+    led_pushFrameboofer();
 }
 void led_setPixel(int pos, uint8_t red, uint8_t green, uint8_t blue)
 {

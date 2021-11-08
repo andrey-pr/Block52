@@ -2,6 +2,7 @@
 
 void sensorsSurvey(void *pvParameters)
 {
+    sensors_init();
     TickType_t lowerOuterSensorCrossTime = -SENSORS_TIME_DELTA,
                lowerInnerSensorCrossTime = -SENSORS_TIME_DELTA,
                upperInnerSensorCrossTime = -SENSORS_TIME_DELTA,

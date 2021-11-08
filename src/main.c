@@ -7,10 +7,9 @@ UART_HandleTypeDef usartHandle;
 int main()
 {
     hardware_init();
-    led_init(STAIRS * LEDS_ON_STAIR);
-    sensors_init();
     freertos_init();
-    xTaskCreate(sensorsSurvey, "sensorsSurvey", 50, NULL, 1, NULL);
+    led_init(STAIRS * LEDS_ON_STAIR);
+    xTaskCreate(sensorsSurvey, "sensorsSurvey", 250, NULL, 1, NULL);
     xTaskCreate(ledControl, "ledControl", 50, NULL, 1, NULL);
 
     vTaskStartScheduler();
