@@ -42,7 +42,7 @@ void sensorsSurvey(void *pvParameters)
             {
                 user.direction = UPSTAIRS;
                 user.currentStair = 0;
-                user.switchDelay = 1000; //(xTaskGetTickCount() - lowerOuterSensorCrossTime / configTICK_RATE_HZ / 60) / LOWER_SENSORS_DISTANCE * STAIR_LENGTH; //TODO
+                user.switchDelay = (xTaskGetTickCount() - lowerOuterSensorCrossTime) * (STAIR_LENGTH / LOWER_SENSORS_DISTANCE);
                 user.lastSwitchTime = 0;
                 xQueueSend(qHandle, &user, 500);
                 lowerOuterSensorCrossTime = -SENSORS_TIME_DELTA;
@@ -58,7 +58,7 @@ void sensorsSurvey(void *pvParameters)
             {
                 user.direction = DOWNSTAIRS;
                 user.currentStair = STAIRS - 1;
-                user.switchDelay = 1000; //(xTaskGetTickCount() - upperOuterSensorCrossTime / configTICK_RATE_HZ / 60) / UPPER_SENSORS_DISTANCE * STAIR_LENGTH; //TODO
+                user.switchDelay = (xTaskGetTickCount() - upperOuterSensorCrossTime) * (STAIR_LENGTH / UPPER_SENSORS_DISTANCE);
                 user.lastSwitchTime = 0;
                 xQueueSend(qHandle, &user, 500);
                 upperOuterSensorCrossTime = -SENSORS_TIME_DELTA;
@@ -68,6 +68,6 @@ void sensorsSurvey(void *pvParameters)
                 upperInnerSensorCrossTime = xTaskGetTickCount();
             }
         }
-        vTaskDelay(100);
+        vTaskDelay(10);
     }
 }

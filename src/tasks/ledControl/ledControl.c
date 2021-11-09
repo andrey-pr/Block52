@@ -50,6 +50,6 @@ void ledControl(void *pvParameters)
         while (!led_isReady())
             ;
         led_pushFrameboofer();
-        vTaskDelay(1000);
+        vTaskDelay(100);
     }
 }
