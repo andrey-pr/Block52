@@ -51,19 +51,24 @@ bool sensors_init()
 
 bool sensors_IsCrossed(enum Sensors sensor)
 {
-	if (state[sensor])
-	{
-		state[sensor] = false;
-		return true;
-	}
 	uint8_t rxData;
 	if (sensor == LOWER_OUTER_SENSOR)
 	{
 		bool crossed = getDistance(device) < 500;
 		rxData = 'a';
-		if (crossed)
+		if (crossed && !state[sensor])
+		{
 			HAL_UART_Transmit(usartHandle, &rxData, sizeof(rxData), 500);
-		return crossed;
+			state[sensor] = true;
+		}
+		else if(!crossed && state[sensor])
+			state[sensor] = false;
+		return crossed && !state[sensor]; //TODO
+	}
+	if (state[sensor])
+	{
+		state[sensor] = false;
+		return true;
 	}
 	while (__HAL_UART_GET_FLAG(usartHandle, UART_FLAG_RXNE))
 	{
