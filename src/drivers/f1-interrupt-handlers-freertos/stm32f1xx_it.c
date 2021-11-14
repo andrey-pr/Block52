@@ -1,5 +1,6 @@
 #include "stm32f1xx_it.h"
 
+extern void xPortSysTickHandler(void);
 void HardFault_Handler(void)
 {
   while (1)
@@ -29,4 +30,15 @@ void UsageFault_Handler(void)
 
 void DebugMon_Handler(void)
 {
+}
+
+void SysTick_Handler(void)
+{
+    HAL_IncTick();
+    HAL_SYSTICK_IRQHandler();
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+    {
+        /* call the FreeRTOS kernel for a tick update*/
+        xPortSysTickHandler();
+    }
 }

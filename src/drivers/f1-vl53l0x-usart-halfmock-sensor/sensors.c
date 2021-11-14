@@ -17,7 +17,7 @@ bool sensors_init()
 
 	Prepare_GPIO();
 	Prepare_I2C();
-	initVL53(device, hi2c, 0x48);
+	initVL53(device, hi2c, 0x52);
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	MOCK_SENSOR_USART_GPIO_CLK_ENABLE();
@@ -198,9 +198,16 @@ int getDistance(VL53L0X_Dev_t *device)
 {
 	VL53L0X_RangingMeasurementData_t result;
 	VL53L0X_Error Status = VL53L0X_PerformSingleRangingMeasurement(device, &result);
-	if (result.RangeStatus == 0)
+	if (result.RangeStatus == 0 && Status == 0)
 	{
 		result.RangeMilliMeter = result.RangeMilliMeter;
+	}
+	else if (Status == -20)
+	{
+		Prepare_I2C();
+		initVL53(device, hi2c, 0x52);
+		result.RangeMilliMeter = 9999;
+		result.RangeStatus = VL53L0X_ERROR_RANGE_ERROR;
 	}
 	else
 	{
@@ -258,12 +265,12 @@ static void Prepare_GPIO(void)
 	HAL_GPIO_Init(SENSORS_VL_XSHUT_GPIO_Port, &GPIO_InitStruct);
 }
 
-void _Error_Handler(char *file, int line)
-{
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	while (1)
-	{
-	}
-	/* USER CODE END Error_Handler_Debug */
-}
+// void _Error_Handler(char *file, int line)
+// {
+// 	/* USER CODE BEGIN Error_Handler_Debug */
+// 	/* User can add his own implementation to report the HAL error return state */
+// 	while (1)
+// 	{
+// 	}
+// 	/* USER CODE END Error_Handler_Debug */
+// }

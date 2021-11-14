@@ -29,8 +29,8 @@
 #define LOWER_SENSORS_DISTANCE 30 //sm
 #define UPPER_SENSORS_DISTANCE 30 //sm
 #define STAIR_LENGTH 30            //sm
-#define STAIRS 2
-#define LEDS_ON_STAIR 1
-#define LED_RED 128
-#define LED_GREEN 0
-#define LED_BLUE 255
+#define STAIRS 4
+#define LEDS_ON_STAIR 2
+#define LED_RED 0
+#define LED_GREEN 128
+#define LED_BLUE 128

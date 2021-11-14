@@ -17,8 +17,8 @@ void led_init(int pcs)
 }
 void led_setPixel(int pos, uint8_t red, uint8_t green, uint8_t blue)
 {
-    frameBuffer[pos * 3] = green;
-    frameBuffer[pos * 3 + 1] = red;
+    frameBuffer[pos * 3] = red;
+    frameBuffer[pos * 3 + 1] = green;
     frameBuffer[pos * 3 + 2] = blue;
 }
 void led_cleanFrameboofer()

@@ -44,7 +44,7 @@ void ledControl(void *pvParameters)
                 {
                     users[i].currentStair += users[i].direction;
                     users[i].lastSwitchTime = xTaskGetTickCount();
-                }
+                } //TODO
             }
         }
         while (!led_isReady())

@@ -15,4 +15,4 @@ enum Sensors
 
 bool sensors_init();
 bool sensors_IsCrossed(enum Sensors sensor);
-void _Error_Handler(char *file, int line);
+// void _Error_Handler(char *file, int line);
