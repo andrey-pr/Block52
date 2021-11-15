@@ -5,7 +5,7 @@ I2C_HandleTypeDef *hi2c;
 VL53L0X_Dev_t *device;
 static void Prepare_GPIO();
 static void Prepare_I2C();
-static VL53L0X_Error initVL53(VL53L0X_Dev_t *device, I2C_HandleTypeDef *i2c, uint8_t new_addr);
+static VL53L0X_Error initVL53(VL53L0X_Dev_t *device, I2C_HandleTypeDef *i2c, uint8_t new_addr, uint8_t id, GPIO_TypeDef *XSHUTPort, uint16_t XSHUTPin);
 static int getDistance(VL53L0X_Dev_t *device);
 bool state[4] = {false, false, false, false};
 
@@ -13,11 +13,12 @@ bool sensors_init()
 {
 	usartHandle = malloc(sizeof(UART_HandleTypeDef));
 	hi2c = malloc(sizeof(I2C_HandleTypeDef));
-	device = malloc(sizeof(VL53L0X_Dev_t));
+	device = malloc(sizeof(VL53L0X_Dev_t) * 4);
 
 	Prepare_GPIO();
 	Prepare_I2C();
-	initVL53(device, hi2c, 0x52);
+	initVL53(&device[0], hi2c, 0x51, 0, SENSORS_VL_1_XSHUT_GPIO_Port, SENSORS_VL_1_XSHUT_Pin);
+	initVL53(&device[1], hi2c, 0x53, 1, SENSORS_VL_2_XSHUT_GPIO_Port, SENSORS_VL_2_XSHUT_Pin);
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	MOCK_SENSOR_USART_GPIO_CLK_ENABLE();
@@ -54,7 +55,7 @@ bool sensors_IsCrossed(enum Sensors sensor)
 	uint8_t rxData;
 	if (sensor == LOWER_OUTER_SENSOR)
 	{
-		bool crossed = getDistance(device) < 500;
+		bool crossed = getDistance(&device[0]) < 1500;
 		rxData = 'a';
 		if (crossed && !state[sensor])
 		{
@@ -62,7 +63,21 @@ bool sensors_IsCrossed(enum Sensors sensor)
 			state[sensor] = true;
 			return true;
 		}
-		else if(!crossed && state[sensor])
+		else if (!crossed && state[sensor])
+			state[sensor] = false;
+		return false; //TODO
+	}
+	if (sensor == LOWER_INNER_SENSOR)
+	{
+		bool crossed = getDistance(&device[1]) < 1500;
+		rxData = 'b';
+		if (crossed && !state[sensor])
+		{
+			HAL_UART_Transmit(usartHandle, &rxData, sizeof(rxData), 500);
+			state[sensor] = true;
+			return true;
+		}
+		else if (!crossed && state[sensor])
 			state[sensor] = false;
 		return false; //TODO
 	}
@@ -92,12 +107,12 @@ bool sensors_IsCrossed(enum Sensors sensor)
 	return false;
 }
 
-static VL53L0X_Error initVL53(VL53L0X_Dev_t *device, I2C_HandleTypeDef *i2c, uint8_t new_addr)
+static VL53L0X_Error initVL53(VL53L0X_Dev_t *device, I2C_HandleTypeDef *i2c, uint8_t new_addr, uint8_t id, GPIO_TypeDef *XSHUTPort, uint16_t XSHUTPin)
 {
 	device->I2cHandle = i2c;
 	device->I2cDevAddr = 0x52;
 	device->Present = 0;
-	device->Id = 0; //TODO
+	device->Id = id;
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 
 	static uint32_t refSpadCount = 0;	//для процесса конфигурации датчиков
@@ -105,10 +120,10 @@ static VL53L0X_Error initVL53(VL53L0X_Dev_t *device, I2C_HandleTypeDef *i2c, uin
 	static uint8_t VhvSettings = 0;		//для процесса конфигурации датчиков
 	static uint8_t PhaseCal = 0;		//для процесса конфигурации датчиков
 
-	HAL_GPIO_WritePin(SENSORS_VL_XSHUT_GPIO_Port, SENSORS_VL_XSHUT_Pin, GPIO_PIN_RESET); //shut down the VL53L0X sensor.
-	vTaskDelay(100);																	 //TODO								 //100
+	HAL_GPIO_WritePin(XSHUTPort, XSHUTPin, GPIO_PIN_RESET); //shut down the VL53L0X sensor.
+	vTaskDelay(100);										//TODO								 //100
 
-	HAL_GPIO_WritePin(SENSORS_VL_XSHUT_GPIO_Port, SENSORS_VL_XSHUT_Pin, GPIO_PIN_SET); //start up the sensor.
+	HAL_GPIO_WritePin(XSHUTPort, XSHUTPin, GPIO_PIN_SET); //start up the sensor.
 	vTaskDelay(100);
 	if (Status == VL53L0X_ERROR_NONE)
 	{
@@ -208,10 +223,12 @@ int getDistance(VL53L0X_Dev_t *device)
 	{
 		result.RangeMilliMeter = result.RangeMilliMeter;
 	}
-	else if (Status == -20)
+	else if (Status == -20 || Status == -6)
 	{
+		Prepare_GPIO();
 		Prepare_I2C();
-		initVL53(device, hi2c, 0x52);
+		initVL53(&device[0], hi2c, 0x51, 0, SENSORS_VL_1_XSHUT_GPIO_Port, SENSORS_VL_1_XSHUT_Pin);
+		initVL53(&device[1], hi2c, 0x53, 1, SENSORS_VL_2_XSHUT_GPIO_Port, SENSORS_VL_2_XSHUT_Pin);
 		result.RangeMilliMeter = 9999;
 		result.RangeStatus = VL53L0X_ERROR_RANGE_ERROR;
 	}
@@ -258,25 +275,24 @@ static void Prepare_GPIO(void)
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	/* GPIO Ports Clock Enable */
-	SENSORS_VL_XSHUT_GPIO_RCC_Enable();
-
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(SENSORS_VL_XSHUT_GPIO_Port, SENSORS_VL_XSHUT_Pin, GPIO_PIN_RESET);
+	SENSORS_VL_1_XSHUT_GPIO_RCC_Enable();
 
 	/*Configure GPIO pin : VL_XSHUT_Pin */
-	GPIO_InitStruct.Pin = SENSORS_VL_XSHUT_Pin;
+	GPIO_InitStruct.Pin = SENSORS_VL_1_XSHUT_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(SENSORS_VL_XSHUT_GPIO_Port, &GPIO_InitStruct);
-}
+	HAL_GPIO_Init(SENSORS_VL_1_XSHUT_GPIO_Port, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(SENSORS_VL_1_XSHUT_GPIO_Port, SENSORS_VL_1_XSHUT_Pin, GPIO_PIN_RESET);
 
-// void _Error_Handler(char *file, int line)
-// {
-// 	/* USER CODE BEGIN Error_Handler_Debug */
-// 	/* User can add his own implementation to report the HAL error return state */
-// 	while (1)
-// 	{
-// 	}
-// 	/* USER CODE END Error_Handler_Debug */
-// }
+	/* GPIO Ports Clock Enable */
+	SENSORS_VL_2_XSHUT_GPIO_RCC_Enable();
+
+	/*Configure GPIO pin : VL_XSHUT_Pin */
+	GPIO_InitStruct.Pin = SENSORS_VL_2_XSHUT_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(SENSORS_VL_2_XSHUT_GPIO_Port, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(SENSORS_VL_2_XSHUT_GPIO_Port, SENSORS_VL_2_XSHUT_Pin, GPIO_PIN_RESET);
+}
