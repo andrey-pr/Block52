@@ -5,7 +5,7 @@ int led_pcs;
 void led_init(int pcs)
 {
     led_pcs = pcs;
-    frameBuffer = (uint8_t *)malloc(pcs * 3 * sizeof(uint8_t));
+    frameBuffer = (uint8_t *)pvPortMalloc(pcs * 3 * sizeof(uint8_t));
     led_cleanFrameboofer();
     ws2812b.item[0].channel = 2;
     ws2812b.item[0].frameBufferPointer = frameBuffer;

@@ -11,9 +11,9 @@ bool state[4] = {false, false, false, false};
 
 bool sensors_init()
 {
-	usartHandle = malloc(sizeof(UART_HandleTypeDef));
-	hi2c1 = malloc(sizeof(I2C_HandleTypeDef));
-	device = malloc(sizeof(VL53L0X_Dev_t));
+	usartHandle = pvPortMalloc(sizeof(UART_HandleTypeDef));
+	hi2c1 = pvPortMalloc(sizeof(I2C_HandleTypeDef));
+	device = pvPortMalloc(sizeof(VL53L0X_Dev_t));
 
 	Prepare_GPIO();
 	Prepare_I2C();
